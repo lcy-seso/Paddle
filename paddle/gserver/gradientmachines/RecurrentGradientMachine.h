@@ -194,6 +194,8 @@ public:
     int seqId;      // index of sequence in batch generation
     std::vector<int> machineIdVec;
 
+    std::vector<real> coveragePenalty;
+
     /**
      * @brief A record of each node's probality in a formed path in beam search.
      *
