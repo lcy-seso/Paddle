@@ -194,8 +194,6 @@ public:
     int seqId;      // index of sequence in batch generation
     std::vector<int> machineIdVec;
 
-    std::vector<real> coveragePenalty;
-
     /**
      * @brief A record of each node's probality in a formed path in beam search.
      *
@@ -203,6 +201,9 @@ public:
      *        wanted to be recorded, recordHistory() MUST be invoked first.
      */
     std::vector<real> probHistory;
+
+    // for GNMT decoding test
+    std::vector<real> attSum;
 
     /**
      * @brief Path default ctor, first logProb is 0.
@@ -408,8 +409,8 @@ private:
   size_t getBeamSize() { return generator_.config.beam_size(); }
 
   size_t getExpandWidth() {
-    return generator_.config.expand_width() ?
-      generator_.config.expand_width() : getBeamSize();
+    return generator_.config.expansion_width() ?
+      generator_.config.expansion_width() : getBeamSize();
   }
 
   /*
@@ -503,5 +504,10 @@ private:
   std::vector<real> minFinalPathLogProb_;
   BeamSearchControlCallbacks* beamSearchCtrlCallbacks_;
   BeamSearchStatisticsCallbacks* beamSearchStatistics_;
+
+  // for GNMT decoding test
+  bool gnmtMode_;
+  MatrixPtr attWeight_;
+  ICpuGpuVectorPtr srcSeqInfo_;  // scattered sequenceStartPositions
 };
 }  // namespace paddle

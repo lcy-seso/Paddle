@@ -361,6 +361,9 @@ def RecurrentLayerGroupSetOutLink(link):
 def RecurrentLayerGroupSetGenerator(generator=None):
     generator.eos_layer_name = MakeLayerNameInSubmodel(
         generator.eos_layer_name)
+    if generator.attention_weight_layer_name is not None:
+        generator.attention_weight_layer_name = MakeLayerNameInSubmodel(
+                generator.attention_weight_layer_name)
     g_current_submodel.generator.CopyFrom(generator)
 
 
@@ -2016,7 +2019,7 @@ def Generator(
         beam_size=1,
         log_prob=None,
         attention_weight_layer_name=None,
-        expand_width=None,
+        expansion_width=None,
         length_penalty_alpha=None,
         coverage_penalty_beta=None):
     generator_config = GeneratorConfig()
@@ -2026,11 +2029,10 @@ def Generator(
     generator_config.beam_size = beam_size
     if log_prob is not None:
         generator_config.log_prob = log_prob
-    if expand_width is not None:
-        generator_config.expand_width = expand_width
+    if expansion_width is not None:
+        generator_config.expansion_width = expansion_width
     if attention_weight_layer_name is not None:
-        generator_config.attention_weight_layer_name = \
-                attention_weight_layer_name
+        generator_config.attention_weight_layer_name = attention_weight_layer_name
     if length_penalty_alpha is not None:
         generator_config.length_penalty_alpha = length_penalty_alpha
     if coverage_penalty_beta is not None:

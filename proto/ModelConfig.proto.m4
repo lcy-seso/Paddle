@@ -430,7 +430,7 @@ message GeneratorConfig {
 
   // for GNMT beam search decoding
   optional string attention_weight_layer_name = 6 [default = ""];
-  optional int32 expand_width = 7 [default = 0];
+  optional int32 expansion_width = 7 [default = 0];
   optional real length_penalty_alpha = 8 [default = 0.];
   optional real coverage_penalty_beta = 9 [default = 0.];
 }

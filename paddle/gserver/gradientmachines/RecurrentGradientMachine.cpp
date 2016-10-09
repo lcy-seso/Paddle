@@ -272,6 +272,10 @@ void RecurrentGradientMachine::init(
     generator_.config = subModelConfig->generator();
     eosFrameLine_.reset(new EosFrameLine);
     maxSequenceLength_ = generator_.config.max_num_frames();
+
+    gnmtMode_ = (!generator_.config.attention_weight_layer_name().empty()) &&
+                 generator_.config.length_penalty_alpha() &&
+                 generator_.config.coverage_penalty_beta();
   }
 
   // get parameters actually used by this Layer Group
@@ -780,8 +784,8 @@ size_t RecurrentGradientMachine::getGenBatchSize() {
   for (auto& memoryFrameLine : memoryFrameLines_) {
     if (!memoryFrameLine.rootLayer) continue;
     Argument& bootArg = memoryFrameLine.rootLayer->getOutput();
-    size_t batchSize = memoryFrameLine.is_sequence ? bootArg.getNumSequences()
-                                                   : bootArg.getBatchSize();
+    size_t batchSize = memoryFrameLine.is_sequence ? bootArg.getNumSequences() :
+                                                     bootArg.getBatchSize();
     if (numSequences) {
       CHECK_EQ(numSequences, batchSize);
     } else {
@@ -991,6 +995,7 @@ void RecurrentGradientMachine::forwardFrame(int machineCur) {
   IVectorPtr& ids = outFrameLines_[0].frames[machineCur]->getOutput().ids;
   MatrixPtr in = outFrameLines_[0].frames[machineCur]->getOutput().in;
   IVectorPtr& eos = eosFrameLine_->layers[machineCur]->getOutput().ids;
+
   if (useGpu_) {
     IVector::resizeOrCreate(cpuId_, ids->getSize(), false /* useGpu */);
     cpuId_->copyFrom(*ids);
@@ -1003,6 +1008,20 @@ void RecurrentGradientMachine::forwardFrame(int machineCur) {
     cpuId_ = ids;
     cpuProb_ = in;
     cpuEos_ = eos;
+  }
+
+  if (gnmtMode_) {
+    Argument& attOut = frames_[machineCur]->getLayer(
+        generator_.config.attention_weight_layer_name())->getOutput();
+    MatrixPtr attW = attOut.value;
+    srcSeqInfo_ = attOut.sequenceStartPositions;
+
+    CHECK_EQ(attW->getWidth(), 1UL);
+    if (useGpu_) {
+      Matrix::resizeOrCreate(attWeight_, attW->getHeight(), attW->getWidth(),
+                             false /* trans */, false /* useGpu */);
+      attWeight_->copyFrom(*attW);
+    } else { attWeight_ = attW; }
   }
 }
 
@@ -1044,6 +1063,10 @@ void RecurrentGradientMachine::singlePathExpand(Path& curPath, size_t curPathId,
       newPath.machineIdVec = curPath.machineIdVec;
       newPath.machineIdVec.push_back(curPathId);
     }
+
+    // for GNMT decoding test
+
+
     bool atEos =
         eosVec[index] == 1U || newPath.ids.size() >= (size_t)maxSequenceLength_;
     // adjustNewPath
@@ -1215,6 +1238,7 @@ void RecurrentGradientMachine::beamSearch(size_t batchSize) {
     if (this->beamSearchCtrlCallbacks_) {
       paths.back().recordHistory();
     }
+    if (gnmtMode_) { paths[i].attSum.resize(maxSequenceLength_ * 2, -1); }
   }
 
   // restart beam search
