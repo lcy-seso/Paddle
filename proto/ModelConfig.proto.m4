@@ -427,6 +427,12 @@ message GeneratorConfig {
   optional int32 beam_size = 4 [default = 1];
 
   optional bool log_prob = 5 [default = true];
+
+  // for GNMT beam search decoding
+  optional string attention_weight_layer_name = 6 [default = ""];
+  optional int32 expand_width = 7 [default = 0];
+  optional real length_penalty_alpha = 8 [default = 0.];
+  optional real coverage_penalty_beta = 9 [default = 0.];
 }
 
 message SubModelConfig {

@@ -407,6 +407,11 @@ private:
    */
   size_t getBeamSize() { return generator_.config.beam_size(); }
 
+  size_t getExpandWidth() {
+    return generator_.config.expand_width() ?
+      generator_.config.expand_width() : getBeamSize();
+  }
+
   /*
    * @return number of sequence in a batch in generation
    */

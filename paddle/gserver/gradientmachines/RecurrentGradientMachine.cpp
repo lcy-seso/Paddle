@@ -844,6 +844,7 @@ void RecurrentGradientMachine::generateSequence() {
       generator_.outArg.ids,
       generator_.config.max_num_frames() * numSequences * resultNum, false);
   if (resultNum > 1) {
+    CHECK_LE(resultNum, getExpandWidth());
     Matrix::resizeOrCreate(generator_.outArg.in, /* height */ numSequences,
                            /* width */ resultNum, false, /* useGpu */ false);
   }
@@ -1091,11 +1092,8 @@ void RecurrentGradientMachine::beamExpand(std::vector<Path>& paths,
 size_t RecurrentGradientMachine::beamShrink(std::vector<Path>& newPaths,
                                             size_t seqId,
                                             size_t totalExpandCount) {
-  // size_t minNewPathSize =
-  //     std::min(getBeamSize(), newPaths.size() - totalExpandCount);
-  size_t numResults = generator_.config.num_results_per_sample();
   size_t minNewPathSize =
-      std::min(numResults, newPaths.size() - totalExpandCount);
+      std::min(getExpandWidth(), newPaths.size() - totalExpandCount);
   if (!minNewPathSize) {
     return 0;
   }

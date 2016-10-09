@@ -2011,11 +2011,14 @@ def Memory(name,
 @config_func
 def Generator(
         max_num_frames,
-        eos_layer_name = "eos_check",
-        num_results_per_sample = 1,
-        beam_size = 1,
-        log_prob = None,
-        ):
+        eos_layer_name="eos_check",
+        num_results_per_sample=1,
+        beam_size=1,
+        log_prob=None,
+        attention_weight_layer_name=None,
+        expand_width=None,
+        length_penalty_alpha=None,
+        coverage_penalty_beta=None):
     generator_config = GeneratorConfig()
     generator_config.max_num_frames = max_num_frames
     generator_config.eos_layer_name = eos_layer_name
@@ -2023,6 +2026,15 @@ def Generator(
     generator_config.beam_size = beam_size
     if log_prob is not None:
         generator_config.log_prob = log_prob
+    if expand_width is not None:
+        generator_config.expand_width = expand_width
+    if attention_weight_layer_name is not None:
+        generator_config.attention_weight_layer_name = \
+                attention_weight_layer_name
+    if length_penalty_alpha is not None:
+        generator_config.length_penalty_alpha = length_penalty_alpha
+    if coverage_penalty_beta is not None:
+        generator_config.coverage_penalty_beta = coverage_penalty_beta
     return generator_config
 
 @config_layer('expand')
