@@ -1087,9 +1087,6 @@ void RecurrentGradientMachine::beamExpand(std::vector<Path>& paths,
                                           std::vector<Path>& newPaths) {
   size_t candidatePathCount = paths.size();
 
-  // for GNMT decoding test
-  CHECK_EQ(candidatePathCount, srcSeqInfo_->getSize() - 1);
-  int* srcLen = srcSeqInfo_->getMutableData(false);
 
   // idVec.size() could be larger than candidatePathCount * beam,
   // so user can drop some node customly.
@@ -1109,14 +1106,18 @@ void RecurrentGradientMachine::beamExpand(std::vector<Path>& paths,
     if (j == candidatePathCount) return;
 
     // for GNMT decoding test
-    int prevLen = srcLen[j];
-    int curLen = srcLen[j + 1];
-    real* attW = attWeight_->getData();
-    for (int srcIdx = 0; srcIdx < curLen; ++srcIdx) {
-      if (paths[j].attSum.size() != static_cast<size_t>(curLen)) {
-        paths[j].attSum.resize(curLen, 0.);
+    if (gnmtMode_) {
+      CHECK_EQ(candidatePathCount, srcSeqInfo_->getSize() - 1);
+      int* srcLen = srcSeqInfo_->getMutableData(false);
+      int prevLen = srcLen[j];
+      int curLen = srcLen[j + 1];
+      real* attW = attWeight_->getData();
+      for (int srcIdx = 0; srcIdx < curLen; ++srcIdx) {
+        if (paths[j].attSum.size() != static_cast<size_t>(curLen)) {
+          paths[j].attSum.resize(curLen, 0.);
+        }
+        paths[j].attSum[srcIdx] += attW[prevLen + srcIdx];
       }
-      paths[j].attSum[srcIdx] += attW[prevLen + srcIdx];
     }
 
     singlePathExpand(paths[j], j, newPaths, expandWidth);
@@ -1204,7 +1205,7 @@ void RecurrentGradientMachine::fillGenOutputs() {
         generator_.ids.insert(generator_.ids.end(), path.ids.begin(),
                               path.ids.end());
         generator_.ids.push_back(-1);  // end of sequence
-        probs[i * numResults + j] = path.logProb;
+        probs[i * numResults + j] = gnmtMode_ ? path.gnmtScore : path.logProb;
 
         if (!j && dataArgsSize_) {
           // in beam search, here only reserved the top 1 generated result
