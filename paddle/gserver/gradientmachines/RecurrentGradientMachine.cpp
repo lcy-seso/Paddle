@@ -1064,9 +1064,6 @@ void RecurrentGradientMachine::singlePathExpand(Path& curPath, size_t curPathId,
       newPath.machineIdVec.push_back(curPathId);
     }
 
-    // for GNMT decoding test
-
-
     bool atEos =
         eosVec[index] == 1U || newPath.ids.size() >= (size_t)maxSequenceLength_;
     // adjustNewPath
@@ -1089,6 +1086,11 @@ void RecurrentGradientMachine::singlePathExpand(Path& curPath, size_t curPathId,
 void RecurrentGradientMachine::beamExpand(std::vector<Path>& paths,
                                           std::vector<Path>& newPaths) {
   size_t candidatePathCount = paths.size();
+
+  // for GNMT decoding test
+  CHECK_EQ(candidatePathCount, srcSeqInfo_->getSize() - 1);
+  int* srcLen = srcSeqInfo_->getMutableData(false);
+
   // idVec.size() could be larger than candidatePathCount * beam,
   // so user can drop some node customly.
   CHECK_EQ(cpuId_->getSize() % candidatePathCount, 0UL);
@@ -1105,6 +1107,18 @@ void RecurrentGradientMachine::beamExpand(std::vector<Path>& paths,
       totalExpandCount += beamShrink(newPaths, prevSeqId, totalExpandCount);
     }
     if (j == candidatePathCount) return;
+
+    // for GNMT decoding test
+    int prevLen = srcLen[j];
+    int curLen = srcLen[j + 1];
+    real* attW = attWeight_->getData();
+    for (int srcIdx = 0; srcIdx < curLen; ++srcIdx) {
+      if (paths[j].attSum.size() != static_cast<size_t>(curLen)) {
+        paths[j].attSum.resize(curLen, 0.);
+      }
+      paths[j].attSum[srcIdx] += attW[prevLen + srcIdx];
+    }
+
     singlePathExpand(paths[j], j, newPaths, expandWidth);
 
     prevSeqId = paths[j].seqId;
@@ -1149,13 +1163,30 @@ size_t RecurrentGradientMachine::beamShrink(std::vector<Path>& newPaths,
   return minNewPathSize;
 }
 
+void RecurrentGradientMachine::calGnmtScore() {
+  for (size_t i = 0; i < finalPaths_.size(); ++i) {
+    for (auto& path : finalPaths_[i]) {
+      real lenPenalty = pow(5 + path.ids.size(),
+                             generator_.config.length_penalty_alpha()) /
+                         pow(6, generator_.config.length_penalty_alpha());
+      real covPenalty = generator_.config.coverage_penalty_beta() *
+          std::accumulate(path.attSum.begin(), path.attSum.end(), 0.,
+                      [](real a, real b) { return b > 0. ? a : a + b; });
+      path.gnmtScore = path.logProb / lenPenalty + covPenalty;
+    }
+  }
+}
+
 void RecurrentGradientMachine::fillGenOutputs() {
+  if (gnmtMode_) calGnmtScore();
+
   size_t numResults = generator_.config.num_results_per_sample();
   for (size_t i = 0; i < finalPaths_.size(); ++i) {
     size_t minFinalPathsSize = std::min(numResults, finalPaths_[i].size());
     std::partial_sort(finalPaths_[i].begin(),
                       finalPaths_[i].begin() + minFinalPathsSize,
-                      finalPaths_[i].end(), Path::greaterPath);
+                      finalPaths_[i].end(),
+                      gnmtMode_ ? Path::greaterGnmtPath : Path::greaterPath);
     finalPaths_[i].resize(minFinalPathsSize);
   }
 
@@ -1238,7 +1269,6 @@ void RecurrentGradientMachine::beamSearch(size_t batchSize) {
     if (this->beamSearchCtrlCallbacks_) {
       paths.back().recordHistory();
     }
-    if (gnmtMode_) { paths[i].attSum.resize(maxSequenceLength_ * 2, -1); }
   }
 
   // restart beam search

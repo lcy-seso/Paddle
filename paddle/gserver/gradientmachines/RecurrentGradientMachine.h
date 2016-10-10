@@ -204,6 +204,7 @@ public:
 
     // for GNMT decoding test
     std::vector<real> attSum;
+    real gnmtScore;
 
     /**
      * @brief Path default ctor, first logProb is 0.
@@ -236,6 +237,7 @@ public:
         // probHistory store current prob, not sum
         this->probHistory.push_back(logProb);
       }
+      if (!old.attSum.empty()) this->attSum = old.attSum;
     }
 
     /**
@@ -248,6 +250,9 @@ public:
     }
 
     static bool greaterPath(const Path& a, const Path& b) { return (b < a); }
+    static bool greaterGnmtPath(const Path& a, const Path& b) {
+      return (a.gnmtScore > b.gnmtScore);
+    }
 
     /**
      * @brief Start recording history in this path.
@@ -495,6 +500,8 @@ private:
    * uesed by the "text_printer" evaluator.
    */
   void fillGenOutputs();
+
+  void calGnmtScore();
 
   std::vector<int> machineIds_;
   std::vector<int> topIds_;
