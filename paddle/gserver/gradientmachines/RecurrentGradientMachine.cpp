@@ -1063,7 +1063,6 @@ void RecurrentGradientMachine::singlePathExpand(Path& curPath, size_t curPathId,
       newPath.machineIdVec = curPath.machineIdVec;
       newPath.machineIdVec.push_back(curPathId);
     }
-
     bool atEos =
         eosVec[index] == 1U || newPath.ids.size() >= (size_t)maxSequenceLength_;
     // adjustNewPath
@@ -1086,8 +1085,6 @@ void RecurrentGradientMachine::singlePathExpand(Path& curPath, size_t curPathId,
 void RecurrentGradientMachine::beamExpand(std::vector<Path>& paths,
                                           std::vector<Path>& newPaths) {
   size_t candidatePathCount = paths.size();
-
-
   // idVec.size() could be larger than candidatePathCount * beam,
   // so user can drop some node customly.
   CHECK_EQ(cpuId_->getSize() % candidatePathCount, 0UL);
