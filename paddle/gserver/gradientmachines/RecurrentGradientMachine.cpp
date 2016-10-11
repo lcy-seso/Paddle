@@ -1176,7 +1176,7 @@ void RecurrentGradientMachine::calGnmtScore() {
                          pow(6, generator_.config.length_penalty_alpha());
       real covPenalty = generator_.config.coverage_penalty_beta() *
           std::accumulate(path.attSum.begin(), path.attSum.end(), 0.,
-                      [](real a, real b) { return b > 0. ? a : a + b; });
+                      [](real a, real b) { return b > 1. ? a : a + log(b); });
       path.gnmtScore = path.logProb / lenPenalty + covPenalty;
     }
   }
