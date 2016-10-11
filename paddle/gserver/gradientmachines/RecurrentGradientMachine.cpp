@@ -273,10 +273,10 @@ void RecurrentGradientMachine::init(
     eosFrameLine_.reset(new EosFrameLine);
     maxSequenceLength_ = generator_.config.max_num_frames();
 
-    gnmtMode_ = (!generator_.config.attention_weight_layer_name().empty()) &&
-                 generator_.config.length_penalty_alpha() &&
+    gnmtMode_ = generator_.config.length_penalty_alpha() ||
                  generator_.config.coverage_penalty_beta();
     if (gnmtMode_) {
+        CHECK(!generator_.config.attention_weight_layer_name().empty());
         LOG(INFO) << "Generating with Google's sequence scoring stretagy."
                   << "See equation 14 in Google's Neural Machine Translation "
                   << "System: Bridging the Gap between Human and Machine "
