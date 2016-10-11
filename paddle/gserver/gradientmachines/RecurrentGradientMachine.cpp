@@ -276,6 +276,12 @@ void RecurrentGradientMachine::init(
     gnmtMode_ = (!generator_.config.attention_weight_layer_name().empty()) &&
                  generator_.config.length_penalty_alpha() &&
                  generator_.config.coverage_penalty_beta();
+    if (gnmtMode_) {
+        LOG(INFO) << "Generating with Google's sequence scoring stretagy."
+                  << "See equation 14 in Google's Neural Machine Translation "
+                  << "System: Bridging the Gap between Human and Machine "
+                  << "Translation for more details.";
+    }
   }
 
   // get parameters actually used by this Layer Group
@@ -1107,12 +1113,13 @@ void RecurrentGradientMachine::beamExpand(std::vector<Path>& paths,
       CHECK_EQ(candidatePathCount, srcSeqInfo_->getSize() - 1);
       int* srcLen = srcSeqInfo_->getMutableData(false);
       int prevLen = srcLen[j];
-      int curLen = srcLen[j + 1];
+      int curLen = srcLen[j + 1] - srcLen[j];
+
+      if (paths[j].attSum.empty()) {
+        paths[j].attSum.resize(curLen, 0.);
+      } else { CHECK_EQ(paths[j].attSum.size(), static_cast<int>(curLen)); }
       real* attW = attWeight_->getData();
       for (int srcIdx = 0; srcIdx < curLen; ++srcIdx) {
-        if (paths[j].attSum.size() != static_cast<size_t>(curLen)) {
-          paths[j].attSum.resize(curLen, 0.);
-        }
         paths[j].attSum[srcIdx] += attW[prevLen + srcIdx];
       }
     }

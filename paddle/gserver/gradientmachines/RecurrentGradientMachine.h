@@ -515,6 +515,6 @@ private:
   // for GNMT decoding test
   bool gnmtMode_;
   MatrixPtr attWeight_;
-  ICpuGpuVectorPtr srcSeqInfo_;  // scattered sequenceStartPositions
+  ICpuGpuVectorPtr srcSeqInfo_;
 };
 }  // namespace paddle
