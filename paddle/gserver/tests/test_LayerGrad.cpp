@@ -879,6 +879,21 @@ TEST(Layer, rankCostLayer) {
   }
 }
 
+TEST(Layer, pairwiseHingeCostLayer) {
+  TestConfig config;
+  config.layerConfig.set_type("pairwise_hinge_cost");
+  config.biasSize = 0;
+
+  config.inputDefs.push_back({INPUT_DATA, "layer_0", 1, 0});
+  config.inputDefs.push_back({INPUT_DATA, "layer_1", 1, 0});
+  config.inputDefs.push_back({INPUT_DATA_TARGET, "layer_2", 1, 0});
+  config.layerConfig.add_inputs();
+  config.layerConfig.add_inputs();
+  config.layerConfig.add_inputs();
+
+  testLayerGrad(config, "rank-cost", 100, false, false);
+}
+
 TEST(Layer, weightedRankCostLayer) {
   TestConfig config;
   config.layerConfig.set_type("rank-cost");
