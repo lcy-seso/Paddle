@@ -284,6 +284,112 @@ void RankingCost::onPassEnd() {
 }
 
 //
+// class PairwiseHinge
+//
+REGISTER_LAYER(pairwise_hinge_cost, PairwiseHingeCost);
+bool PairwiseHingeCost::init(const LayerMap& layerMap,
+                       const ParameterMap& parameterMap) {
+  posPairCount_ = 0;
+  negPairCount_ = 0;
+
+  bool ret = Layer::init(layerMap, parameterMap);
+  if (!ret) return ret;
+  CHECK_GE(inputLayers_.size(), 3UL);
+  CHECK_LE(inputLayers_.size(), 4UL);
+  if (inputLayers_.size() == 4) {
+    weightLayer_ = inputLayers_[3];
+  }
+  return true;
+}
+
+void PairwiseHingeCost::forward(PassType passType) {
+  Layer::forward(passType);
+
+  /* malloc memory for the output_ if necessary */
+  int batchSize = getInputValue(*getOutputLayer(0))->getHeight();
+  int size = 1;
+  resizeOutput(batchSize, size);
+  Matrix::resizeOrCreate(margin_, batchSize, size, /* trans= */ false, useGpu_);
+  MatrixPtr label = getInputValue(*getLabelLayer());
+  if (!label) {
+    // input label is not in value, try ids
+    IVectorPtr idLabel = getInput(*getLabelLayer()).ids;
+    CHECK(idLabel) << "label layer has neither value nor ids";
+    CHECK_EQ((size_t)batchSize, idLabel->getSize());
+    Matrix::resizeOrCreate(labelBuf_, batchSize, /*width*/ 1, /*trans*/ false,
+                           useGpu_);
+    labelBuf_->copyFrom(*idLabel);
+    label = labelBuf_;
+  }
+
+  MatrixPtr output[] = {getInputValue(*getOutputLayer(0)),
+                        getInputValue(*getOutputLayer(1))};
+  MatrixPtr target = this->getOutputValue();
+  margin_->sub(*output[0], *output[1]);
+
+  // for validation
+  size_t height = output[0]->getHeight();
+  target->biggerThan(*(output[0]), *(output[1]), *label);
+  double total = static_cast<double>(height);
+  if (weightLayer_) {
+    const MatrixPtr& weight = getInputValue(*weightLayer_);
+    target->dotMul(*target, *weight);
+    total = weight->getSum();
+  }
+  double pos = target->getSum();
+  posPairCount_ += pos;
+  negPairCount_ += (total - pos);
+
+  // forward
+  real* marginV = margin_->getData();
+  real* targetV = target->getData();
+  for (int i = 0; i < batchSize; ++i) {
+    targetV[i] = marginV[i] < 1.0 ? marginV[i] : 0;
+  }
+  if (weightLayer_) {
+    const MatrixPtr& weight = getInputValue(*weightLayer_);
+    target->dotMul(*target, *weight);
+  }
+}
+
+void PairwiseHingeCost::backward(const UpdateCallback& callback) {
+  (void)callback;
+
+  MatrixPtr label = getInputValue(*getLabelLayer());
+  if (!label) {
+    // input label is not in value, but in ids
+    // use labelBuf_ (should already resized and copied during forward)
+    label = labelBuf_;
+  }
+
+  int batchSize = label->getHeight();
+  Matrix::resizeOrCreate(marginGrad_, batchSize, 1, /* trans= */ false,
+                         useGpu_);
+  marginGrad_->zeroMem();
+  real* marginGradV = marginGrad_->getData();
+  real* marginV = margin_->getData();
+  for (int i = 0; i < batchSize; ++i) {
+    marginGradV[i] = marginV[i] < 1.0 ? -1. : 0;
+  }
+  if (weightLayer_) {
+    const MatrixPtr& weight = getInputValue(*weightLayer_);
+    marginGrad_->dotMul(*marginGrad_, *weight);
+  }
+
+  getInputGrad(0)->add(*marginGrad_);
+  getInputGrad(1)->sub(*marginGrad_);
+}
+
+void PairwiseHingeCost::onPassEnd() {
+  double ratio = posPairCount_ / ((negPairCount_ <= 0) ? 1.0 : negPairCount_);
+  LOG(INFO) << "calc pos/neg: " << ratio << " pos= " << posPairCount_
+            << " neg= " << negPairCount_;
+
+  posPairCount_ = 0;
+  negPairCount_ = 0;
+}
+
+//
 // class LambdaCost
 //
 REGISTER_LAYER(lambda_cost, LambdaCost);

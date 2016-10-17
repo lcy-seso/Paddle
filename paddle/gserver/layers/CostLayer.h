@@ -194,6 +194,50 @@ private:
   LayerPtr weightLayer_;
 };
 
+
+/**
+ * The pairwise hinge loss for rank.
+ * The loss function is:
+ *
+ */
+class PairwiseHingeCost : public Layer {
+public:
+  explicit PairwiseHingeCost(const LayerConfig& config) : Layer(config) {}
+
+  bool init(const LayerMap& layerMap, const ParameterMap& parameterMap);
+
+  LayerPtr getOutputLayer(size_t i) { return inputLayers_[i]; }
+
+  LayerPtr getLabelLayer() { return inputLayers_[2]; }
+
+  void forward(PassType passType);
+
+  void backward(const UpdateCallback& callback = nullptr);
+
+  void onPassEnd();
+
+  void forwardImp(Matrix& output, Argument& label, Matrix& cost) {
+    (void)output;
+    (void)label;
+    (void)cost;
+  }
+
+  void backwardImp(Matrix& outputValue, Argument& label, Matrix& outputGrad) {
+    (void)outputValue;
+    (void)label;
+    (void)outputGrad;
+  }
+
+private:
+  double posPairCount_;
+  double negPairCount_;
+  MatrixPtr margin_;
+  MatrixPtr marginGrad_;
+  /// if input label is put in ids (not value), copy to this buffer.
+  MatrixPtr labelBuf_;
+  LayerPtr weightLayer_;
+};
+
 /**
  * LambdaRank os a method for learning arbitrary information retrieval
  * measures. It can be applied to any algorithm that learns through gradient

@@ -1717,6 +1717,7 @@ def define_cost(class_name, cost_type):
 define_cost('MultiClassCrossEntropy', 'multi-class-cross-entropy')
 define_cost('ClassificationErrorLayer', 'classification_error')
 define_cost('RankingCost', 'rank-cost')
+define_cost('PairwiseHingeCost', 'pairwise_hinge_cost')
 define_cost('AucValidation', 'auc-validation')
 define_cost('PnpairValidation', 'pnpair-validation')
 define_cost('SumOfSquaresCostLayer', 'square_error')
