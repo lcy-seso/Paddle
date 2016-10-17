@@ -222,6 +222,21 @@ void backward(Argument& act) { act.grad->tanhDerivative(*act.value); }
 END_DEFINE_ACTIVATION(tanh)
 
 /**
+ * @brief SoftSign Activation.
+ * \f[
+ * f(z) = \frac{z}{1 + |z|}
+ * \f]
+ */
+BEGIN_DEFINE_ACTIVATION(softsign)
+private:
+MatrixPtr sumTmp_;
+void forward(Argument& act) { act.value->softsign(*act.value, sumTmp_); }
+void backward(Argument& act) {
+  act.grad->softsignDerivative(*act.value, sumTmp_);
+}
+END_DEFINE_ACTIVATION(softsign)
+
+/**
  * @brief Scaled Tanh Activation
  * \f[
  * f(z) = 1.7159 * tanh(2/3*z)
