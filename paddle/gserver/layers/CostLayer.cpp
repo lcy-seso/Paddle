@@ -344,7 +344,7 @@ void PairwiseHingeCost::forward(PassType passType) {
   real* marginV = margin_->getData();
   real* targetV = target->getData();
   for (int i = 0; i < batchSize; ++i) {
-    targetV[i] = marginV[i] < 1.0 ? marginV[i] : 0;
+    targetV[i] = marginV[i] < 1.0 ? 1.0 - marginV[i] : 0;
   }
   if (weightLayer_) {
     const MatrixPtr& weight = getInputValue(*weightLayer_);
