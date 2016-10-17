@@ -1717,7 +1717,6 @@ def define_cost(class_name, cost_type):
 define_cost('MultiClassCrossEntropy', 'multi-class-cross-entropy')
 define_cost('ClassificationErrorLayer', 'classification_error')
 define_cost('RankingCost', 'rank-cost')
-define_cost('PairwiseHingeCost', 'pairwise_hinge_cost')
 define_cost('AucValidation', 'auc-validation')
 define_cost('PnpairValidation', 'pnpair-validation')
 define_cost('SumOfSquaresCostLayer', 'square_error')
@@ -1788,6 +1787,19 @@ class LambdaCost(LayerBase):
           config_assert(NDCG_num <= max_sort_size,
                         'NDCG_num must be less than or equal to max_sort_size')
         self.config.max_sort_size = max_sort_size
+
+@config_layer('pairwise_hinge_cost')
+class PairwiseHingeCost(LayerBase):
+    def __init__(
+            self,
+            name,
+            inputs,
+            margin=None,
+            device=None):
+        super(PairwiseHingeCost, self).__init__(
+            name, 'pairwise_hinge_cost', 1, inputs=inputs, device=device)
+        if margin is not None:
+            self.config.margin = margin
 
 @config_layer('nce')
 class NCELayer(LayerBase):
