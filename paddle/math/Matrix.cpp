@@ -722,14 +722,6 @@ void GpuMatrix::tanhDerivative(Matrix& output) {
   BaseMatrix::tanhDerivative(output);
 }
 
-void GpuMatrix::softsign(Matrix& output, MatrixPtr tmpSum) {
-  LOG(FATAL) << "not implemented";
-}
-
-void GpuMatrix::softsignDerivative(Matrix& output, MatrixPtr tmpSum) {
-  LOG(FATAL) << "not implemented";
-}
-
 void GpuMatrix::softrelu(Matrix& output) { BaseMatrix::softrelu(output); }
 
 void GpuMatrix::softreluDerivative(Matrix& output) {
@@ -3244,26 +3236,6 @@ void CpuMatrix::tanh(Matrix& output) {
 
 void CpuMatrix::tanhDerivative(Matrix& output) {
   BaseMatrix::tanhDerivative(output);
-}
-
-void CpuMatrix::softsign(Matrix& output, MatrixPtr tmpSum) {
-  tmpSum = output.clone(output.getHeight(), output.getWidth() , false);
-  tmpSum->copyFrom(output);
-
-  tmpSum->abs(*tmpSum);
-  tmpSum->add(1);
-  output.dotDiv(output, *tmpSum);
-}
-
-void CpuMatrix::softsignDerivative(Matrix& output, MatrixPtr tmpSum) {
-  tmpSum = output.clone(output.getHeight(), output.getWidth() , false);
-  tmpSum->copyFrom(output);
-
-  tmpSum->add(1);
-  tmpSum->square();
-
-  absDerivative(output);
-  dotDiv(*this, *tmpSum);
 }
 
 void CpuMatrix::softrelu(Matrix& output) {

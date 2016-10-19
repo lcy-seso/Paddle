@@ -641,14 +641,6 @@ public:
     LOG(FATAL) << "Not implemented";
   }
 
-  virtual void softsign(Matrix& output, MatrixPtr tmpSum) {
-    LOG(FATAL) << "Not implemented";
-  }
-
-  virtual void softsignDerivative(Matrix& output, MatrixPtr tmpSum) {
-    LOG(FATAL) << "Not implemented";
-  }
-
   virtual void softrelu(Matrix& output) { LOG(FATAL) << "Not implemented"; }
 
   virtual void softreluDerivative(Matrix& output) {
@@ -1114,9 +1106,6 @@ public:
   void tanh(Matrix& output);
   void tanhDerivative(Matrix& output);
 
-  void softsign(Matrix& output, MatrixPtr tmpSum);
-  void softsignDerivative(Matrix& output, MatrixPtr tmpSum);
-
   void softrelu(Matrix& output);
   void softreluDerivative(Matrix& output);
   void scaledTanh(Matrix& output, real p1, real p2);
@@ -1433,9 +1422,6 @@ public:
 
   void tanh(Matrix& output);
   void tanhDerivative(Matrix& output);
-
-  void softsign(Matrix& output, MatrixPtr tmpSum);
-  void softsignDerivative(Matrix& output, MatrixPtr tmpSum);
 
   void softrelu(Matrix& output);
   void softreluDerivative(Matrix& output);

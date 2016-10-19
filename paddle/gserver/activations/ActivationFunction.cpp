@@ -230,9 +230,20 @@ END_DEFINE_ACTIVATION(tanh)
 BEGIN_DEFINE_ACTIVATION(softsign)
 private:
 MatrixPtr sumTmp_;
-void forward(Argument& act) { act.value->softsign(*act.value, sumTmp_); }
+void forward(Argument& act) {
+  size_t height = act.value->getHeight();
+  size_t width = act.value->getWidth();
+  Matrix::resizeOrCreate(sumTmp_, height, width, false, useGpu(act.deviceId));
+  sumTmp_->copyFrom(*act.value);
+  sumTmp_->abs(*sumTmp_);
+  sumTmp_->add(1);
+
+  act.value->dotDiv(*act.value, *sumTmp_);
+}
+
 void backward(Argument& act) {
-  act.grad->softsignDerivative(*act.value, sumTmp_);
+  sumTmp_->square();
+  act.grad->scalarDiv(*sumTmp_, 1.0);
 }
 END_DEFINE_ACTIVATION(softsign)
 
