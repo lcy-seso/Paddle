@@ -243,7 +243,8 @@ void forward(Argument& act) {
 
 void backward(Argument& act) {
   sumTmp_->square();
-  act.grad->scalarDiv(*sumTmp_, 1.0);
+  sumTmp_->scalarDiv(*sumTmp_, 1.0);
+  act.grad->dotMul(*act.grad, *sumTmp_);
 }
 END_DEFINE_ACTIVATION(softsign)
 
