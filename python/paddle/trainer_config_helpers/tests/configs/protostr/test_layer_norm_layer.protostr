@@ -1,0 +1,70 @@
+type: "nn"
+layers {
+  name: "input"
+  type: "data"
+  size: 300
+  active_type: ""
+}
+layers {
+  name: "__fc_layer_0__"
+  type: "fc"
+  size: 100
+  active_type: "tanh"
+  inputs {
+    input_layer_name: "input"
+    input_parameter_name: "___fc_layer_0__.w0"
+  }
+}
+layers {
+  name: "__layer_norm_layer_0__"
+  type: "layer_norm"
+  size: 100
+  active_type: "tanh"
+  inputs {
+    input_layer_name: "__fc_layer_0__"
+    input_parameter_name: "___layer_norm_layer_0__.w0"
+  }
+  bias_parameter_name: "___layer_norm_layer_0__.wbias"
+}
+parameters {
+  name: "___fc_layer_0__.w0"
+  size: 30000
+  initial_mean: 0.0
+  initial_std: 0.057735026919
+  dims: 300
+  dims: 100
+  initial_strategy: 0
+  initial_smart: true
+}
+parameters {
+  name: "___layer_norm_layer_0__.w0"
+  size: 100
+  initial_mean: 0.0
+  initial_std: 1.0
+  dims: 1
+  dims: 100
+  initial_strategy: 0
+  initial_smart: true
+}
+parameters {
+  name: "___layer_norm_layer_0__.wbias"
+  size: 100
+  initial_mean: 0.0
+  initial_std: 0.0
+  dims: 1
+  dims: 100
+  initial_strategy: 0
+  initial_smart: false
+}
+input_layer_names: "input"
+output_layer_names: "__layer_norm_layer_0__"
+sub_models {
+  name: "root"
+  layer_names: "input"
+  layer_names: "__fc_layer_0__"
+  layer_names: "__layer_norm_layer_0__"
+  input_layer_names: "input"
+  output_layer_names: "__layer_norm_layer_0__"
+  is_recurrent_layer_group: false
+}
+

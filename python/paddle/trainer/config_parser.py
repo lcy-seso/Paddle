@@ -1193,8 +1193,7 @@ def parse_image(image, input_layer_name, image_conf):
 def parse_norm(norm, input_layer_name, norm_conf):
     norm_conf.norm_type = norm.norm_type
     config_assert(
-        norm.norm_type in
-        ['rnorm', 'cmrnorm-projection', 'cross-channel-norm'],
+        norm.norm_type in ['rnorm', 'cmrnorm-projection', 'cross-channel-norm'],
         "norm-type %s is not in [rnorm, cmrnorm-projection, cross-channel-norm]"
         % norm.norm_type)
     norm_conf.channels = norm.channels
@@ -2013,6 +2012,25 @@ class BatchNormLayer(LayerBase):
 
     def calc_parameter_size(self, image_conf):
         return image_conf.channels
+
+
+@config_layer('layer_norm')
+class LayerNormLayer(LayerBase):
+    layer_type = 'layer_norm'
+
+    def __init__(self, name, inputs, bias=True, **xargs):
+        if not isinstance(inputs, list):
+            inputs = [inputs]
+        config_assert(
+            len(inputs) == 1, ("Layer Normalization Layer "
+                               "has only one input"))
+        super(LayerNormLayer, self).__init__(
+            name, self.layer_type, 0, inputs=inputs, **xargs)
+
+        size = self.get_input_layer(0).size
+        self.set_layer_size(size)
+        self.create_input_parameter(0, size, [1, size])
+        self.create_bias_parameter(bias, size, [1, size])
 
 
 @config_layer('trans')

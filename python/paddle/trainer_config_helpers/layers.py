@@ -59,6 +59,7 @@ __all__ = [
     'img_conv_layer',
     'img_pool_layer',
     'batch_norm_layer',
+    'layer_norm_layer',
     'img_cmrnorm_layer',
     'addto_layer',
     'concat_layer',
@@ -153,6 +154,7 @@ class LayerType(object):
     CUDNNCONV_LAYER = 'cudnn_conv'
     POOL_LAYER = 'pool'
     BATCH_NORM_LAYER = 'batch_norm'
+    LAYER_NORM_LAYER = 'layer_norm'
     NORM_LAYER = 'norm'
     SUM_TO_ONE_NORM_LAYER = 'sum_to_one_norm'
     ADDTO_LAYER = 'addto'
@@ -2644,6 +2646,34 @@ def batch_norm_layer(input,
         parents=[input],
         activation=act,
         num_filters=num_channels,
+        size=l.config.size)
+
+
+@wrap_name_default()
+@wrap_bias_attr_default()
+@wrap_param_attr_default()
+@wrap_act_default(act=ReluActivation())
+@layer_support()
+def layer_norm_layer(input,
+                     act=None,
+                     name=None,
+                     bias_attr=None,
+                     param_attr=None,
+                     layer_attr=None):
+
+    l = Layer(
+        name=name,
+        inputs=Input(input.name, **param_attr.attr),
+        active_type=act.name,
+        type=LayerType.LAYER_NORM_LAYER,
+        bias=ParamAttr.to_bias(bias_attr),
+        **ExtraLayerAttribute.to_kwargs(layer_attr))
+
+    return LayerOutput(
+        name=name,
+        layer_type=LayerType.LAYER_NORM_LAYER,
+        parents=[input],
+        activation=act,
         size=l.config.size)
 
 
