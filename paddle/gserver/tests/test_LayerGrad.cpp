@@ -1517,6 +1517,27 @@ TEST(Layer, BatchNormalizationLayer) {
 #endif
 }
 
+TEST(Layer, LayerNormalizationLayer) {
+  const int layer_size = 256;
+
+  TestConfig config;
+  config.layerConfig.set_type("layer_norm");
+  config.layerConfig.set_size(layer_size);
+  config.layerConfig.set_active_type("tanh");
+  config.biasSize = layer_size;
+
+  config.inputDefs.push_back({INPUT_DATA,
+                              "layer_0",
+                              /* dim= */ layer_size,
+                              /* paraSize= */ 1 * layer_size});
+  config.layerConfig.add_inputs();
+
+  for (auto useGpu : {false, true}) {
+    testLayerGrad(
+        config, "layer_conv", /* batch_size=*/64, false, useGpu, false);
+  }
+}
+
 void testConvOperator(bool isDeconv) {
   TestConfig config;
   const int NUM_FILTERS = 16;
