@@ -66,9 +66,11 @@ class Inference(object):
             field = [field]
 
         for result in self.iter_infer(**kwargs):
-            for each_result in result:
-                item = [each_result[each_field] for each_field in field]
-                yield item
+            assert len(result) == len(field)
+            item = []
+            for idx, each_output_layer in enumerate(result):
+                item.append(each_output_layer[field[idx]])
+            yield item
 
     def infer(self, input, field='value', **kwargs):
         """
@@ -79,15 +81,7 @@ class Inference(object):
         retv = None
         kwargs['input'] = input
         for result in self.iter_infer_field(field=field, **kwargs):
-            if retv is None:
-                retv = [[] for i in xrange(len(result))]
-            for i, item in enumerate(result):
-                retv[i].append(item)
-        retv = [numpy.concatenate(out) for out in retv]
-        if len(retv) == 1:
-            return retv[0]
-        else:
-            return retv
+            return result
 
 
 def infer(output_layer, parameters, input, feeding=None, field='value'):
