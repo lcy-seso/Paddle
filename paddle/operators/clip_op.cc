@@ -45,9 +45,11 @@ class ClipOpMaker : public framework::OpProtoAndCheckerMaker {
              "The number of dimensions must be between [1, 9].");
     AddOutput("Out", "(Tensor)The output of clip op with shape as input(X)");
     AddAttr<AttrType>(
-        "min", "(float)Minimum value, under which element is replaced by min.");
+        "min", "(float) Minimum value, under which element is replaced by min.")
+        .SetDefault(std::numeric_limits<AttrType>::lowest());
     AddAttr<AttrType>(
-        "max", "(float)Maximum value, above which element is replaced by max");
+        "max", "(float) Maximum value, above which element is replaced by max")
+        .SetDefault(std::numeric_limits<AttrType>::max());
     AddComment(R"DOC(
 Clip Operator.
 

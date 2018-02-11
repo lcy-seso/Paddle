@@ -65,6 +65,7 @@ __all__ = [
     'beam_search',
     'row_conv',
     'multiplex',
+    'clip',
 ]
 
 
@@ -2992,5 +2993,41 @@ def multiplex(inputs, index):
         type='multiplex',
         inputs={'X': inputs,
                 'Ids': index},
+        outputs={'Out': [out]})
+    return out
+
+
+def clip(x, min_value, max_value):
+    """
+    **clip layer.**
+
+    Clip operator limits the given input within an interval. The interval is
+    specified with arguments 'min' and 'max'. They default to
+    numeric_limits::lowest() and numeric_limits::max() respectively.
+
+    Args:
+       x (Variable): Input tensor whose elements to be clipped.
+       min_value (float): Maximum value, above which element is replaced by max.
+       max_value (float): Minimum value, under which element is replaced by min.
+
+    Returns:
+        Variable: Output tensor with clipped input elements.
+
+    Examples:
+        .. code-block:: python
+
+            x1 = fluid.layers.data(name='x1', shape=[4], dtype='float32')
+            x2 = fluid.layers.data(name='x2', shape=[4], dtype='float32')
+            index = fluid.layers.data(name='index', shape=[1], dtype='int32')
+            out = fluid.layers.multiplex(inputs=[x1, x2], index=index)
+    """
+    helper = LayerHelper('clip', **locals())
+
+    out = helper.create_tmp_variable(x.dtype)
+    helper.append_op(
+        type='clip',
+        inputs={'X': x},
+        attrs={'min': sys.float_info.min,
+               'max': sys.float_info.max},
         outputs={'Out': [out]})
     return out
